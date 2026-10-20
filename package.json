@@ -14,7 +14,9 @@
     "import:submissions": "tsx scripts/import-submissions.ts",
     "check:submissions": "tsx scripts/import-submissions.ts --check",
     "test": "node --import tsx --test scripts/*.test.ts",
-    "ratings:fetch": "tsx scripts/fetch-ratings.ts"
+    "ratings:fetch": "tsx scripts/fetch-ratings.ts",
+    "downloads:fetch": "tsx scripts/fetch-downloads.ts",
+    "downloads:publish": "tsx scripts/publish-downloads.ts"
   },
   "dependencies": {
     "astro": "^7.2.8"

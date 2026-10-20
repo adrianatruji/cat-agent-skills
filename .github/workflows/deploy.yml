@@ -4,15 +4,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  # Refresh baked-in skill ratings (positive reaction counts) once a day even
-  # when there are no code pushes, so "Top rated" sort stays current. The build
-  # and deploy only run when the counts actually changed, so quiet days don't
-  # produce a redundant no-op deployment (see the "Fetch skill ratings" step).
+  # Refresh baked-in skill ratings (positive reaction counts) and download
+  # counts once a day even when there are no code pushes, so "Top rated" and
+  # download numbers stay current. The build and deploy only run when the counts
+  # actually changed, so quiet days don't produce a redundant no-op deployment
+  # (see the "Fetch skill ratings and downloads" step).
   schedule:
     - cron: "0 6 * * *"
 
 permissions:
-  contents: write # commit the refreshed ratings snapshot back to main
+  contents: write # commit refreshed counts back to main; publish download files to the release
   pages: write
   id-token: write
   discussions: read
@@ -37,11 +38,14 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Fetch skill ratings
+      - name: Fetch skill ratings and downloads
         id: ratings
         run: |
           npm run ratings:fetch
-          if git diff --quiet -- src/data/ratings.json; then
+          # Download counts come from the `skill-downloads` release assets plus
+          # the Clarity-era baseline (see scripts/fetch-downloads.ts).
+          npm run downloads:fetch
+          if git diff --quiet -- src/data/ratings.json src/data/downloads.json; then
             changed=false
           else
             changed=true
@@ -53,20 +57,20 @@ jobs:
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
-            echo "No rating changes on scheduled run; skipping build and deploy."
+            echo "No rating or download changes on scheduled run; skipping build and deploy."
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Persist refreshed ratings
+      - name: Persist refreshed counts
         if: steps.ratings.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data/ratings.json
-          git commit -m "chore(ratings): refresh skill reaction counts"
+          git add src/data/ratings.json src/data/downloads.json
+          git commit -m "chore(stats): refresh skill ratings and download counts"
           # A GITHUB_TOKEN push does not retrigger workflows, so this run still
           # owns the deploy below; the commit only keeps tomorrow's diff stable.
-          git push || echo "::warning::Could not push refreshed ratings; will retry next run."
+          git push || echo "::warning::Could not push refreshed counts; will retry next run."
       # Regenerate every skill page + bundle from submissions/ before building.
       # PR CI only commits generated content back to SAME-REPO PR branches; fork
       # PRs are validate-only, so their src/content/skills/<slug>.md never lands
@@ -79,6 +83,17 @@ jobs:
       - name: Build
         if: steps.ratings.outputs.should_deploy == 'true'
         run: npm run build
+        env:
+          # Point download buttons at the release assets so GitHub counts them.
+          PUBLIC_DOWNLOADS_RELEASE_URL: ${{ github.server_url }}/${{ github.repository }}/releases/download/skill-downloads
+      # Upload new/changed download files to the `skill-downloads` release before
+      # the site goes live, so the links baked in above always resolve. Fails the
+      # run (and skips the deploy) if uploading fails.
+      - name: Publish download files
+        if: steps.ratings.outputs.should_deploy == 'true'
+        run: npm run downloads:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish Copilot Studio skill branch
         if: steps.ratings.outputs.should_deploy == 'true'
         env:

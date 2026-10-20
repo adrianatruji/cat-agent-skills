@@ -3,13 +3,13 @@ import Layout from "../../layouts/Layout.astro";
 import SkillCover from "../../components/SkillCover.astro";
 import { getCollection, render } from "astro:content";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import {
   validateAutomationData,
   type AutomationDigest,
 } from "../../../scripts/validate-automation";
 import { formatDate, PLATFORM_COLORS, initials, coverGradient } from "../../lib/skills";
-import { withBase } from "../../lib/url";
+import { downloadHref, withBase } from "../../lib/url";
 import { authorKey, normalizeLogin } from "../../lib/badges";
 import { getRating } from "../../lib/ratings";
 import { getDownloads } from "../../lib/downloads";
@@ -435,7 +435,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
               isPlugin ? (
                 d.bundle && (
                   <a
-                    href={withBase(`/${d.bundle}`)}
+                    href={downloadHref(basename(d.bundle), `/${d.bundle}`)}
                     download
                     data-clarity-event="skill_download"
                     data-clarity-skill={skill.id}
@@ -458,7 +458,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
               ) : isAutomation ? (
                 d.bundle && (
                   <a
-                    href={withBase(`/${d.bundle}`)}
+                    href={downloadHref(basename(d.bundle), `/${d.bundle}`)}
                     download={isInstaller ? `${skill.id}.zip` : `${skill.id}.json`}
                     data-clarity-event="skill_download"
                     data-clarity-skill={skill.id}
@@ -488,7 +488,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
                 <>
                   {d.bundle ? (
                     <a
-                      href={withBase(`/${d.bundle}`)}
+                      href={downloadHref(basename(d.bundle), `/${d.bundle}`)}
                       download
                       data-clarity-event="skill_download"
                       data-clarity-skill={skill.id}
@@ -509,7 +509,7 @@ const authorGalleryUrl = withBase(`/?author=${encodeURIComponent(authorSlug)}`);
                     </a>
                   ) : (
                     <a
-                      href={withBase(`/skills/${skill.id}.md`)}
+                      href={downloadHref(`${skill.id}.md`, `/skills/${skill.id}.md`)}
                       download="SKILL.md"
                       data-clarity-event="skill_download"
                       data-clarity-skill={skill.id}

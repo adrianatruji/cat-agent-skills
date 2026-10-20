@@ -2,12 +2,12 @@
  * Read-side helper for skill download counts.
  *
  * `src/data/downloads.json` is a static, committed snapshot of all-time download
- * counts keyed by skill slug. Unlike ratings (fetched from GitHub Discussions),
- * downloads cannot be read from the Microsoft Clarity Data Export API — the
- * `skill_download` Smart Event is not exposed as an API dimension — so the file
- * is maintained out-of-band (seeded from a Clarity dashboard CSV export and
- * refreshed by overwriting this file). The site simply bakes the numbers in at
- * build time, exactly like `ratings.ts` does for reaction counts.
+ * counts keyed by skill slug, refreshed daily by the deploy workflow
+ * (`scripts/fetch-downloads.ts`). Download buttons link to assets on the
+ * `skill-downloads` GitHub Release, whose `download_count`s are added to the
+ * Clarity-era numbers in `src/data/downloads-baseline.json` (Clarity's Data
+ * Export API cannot return the `skill_download` event, so it can't be the
+ * source). The site bakes the numbers in at build time, like `ratings.ts`.
  */
 import downloads from "../data/downloads.json";
 
