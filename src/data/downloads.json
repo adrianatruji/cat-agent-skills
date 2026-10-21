@@ -1,9 +1,11 @@
 {
   "agent-harness-explorer": 142,
   "ai-usecase-assessment": 133,
+  "awaiting-reply": 1,
   "brand-template-enforcer": 98,
-  "chart-builder": 255,
+  "chart-builder": 256,
   "doc-format-converter": 177,
+  "idea-refiner": 1,
   "linkedin-content-writer": 60,
   "powerpoint-deck-designer": 101,
   "redlining-content": 81,
